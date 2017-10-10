@@ -796,11 +796,12 @@ flatten.bed <- function(x,multiplier=.001) {
 # TODO: add in shadow support for denote marker feature (label if block below) and test
 grid.refsnp <- function(name,pos,pval,draw.name=TRUE,label=NULL,color=NULL,shadow=FALSE) {
 
-  if (draw.name) {
+  if (draw.name && length(pval) > 0 && length(pos) > 0) {
     # Figure out text height. 
     text_height = grobHeight(textGrob(as.character(name),gp = gpar(cex = args[['refsnpTextSize']])));
     
-    if (!is.null(label) && !is.na(label) && label != "") {
+#    if (!is.null(label) && !is.na(label) && label != "") {
+     if (!is.null(label) && !is.na(label) && length(label) > 0) {
       grid.text(
         as.character(label),
         x=unit(pos,"native"), 
@@ -843,7 +844,7 @@ grid.refsnp <- function(name,pos,pval,draw.name=TRUE,label=NULL,color=NULL,shado
 
       grid.draw(refsnp_text);
     }
-  }
+  
   
   grid.segments(
     x0=unit(pos,"native"),
@@ -857,6 +858,7 @@ grid.refsnp <- function(name,pos,pval,draw.name=TRUE,label=NULL,color=NULL,shado
       lty=args[['refsnpLineType']]
     )
   );
+  }
 }
 
 #############################################################
@@ -1690,7 +1692,7 @@ panel.bed <- function(bed_data,track_height,startbp,endbp) {
     
     is_white = bed_data$color == "#FFFFFF";
     if (any(is_white)) {
-      bed_data[is_white,]$color = "#E5E5E5";
+      bed_data$color[is_white] = "#E5E5E5";
     }
   } else {
     bed_data$color = "black";
@@ -2499,10 +2501,11 @@ zplot <- function(metal,ld=NULL,recrate=NULL,refidx=NULL,nrugs=0,postlude=NULL,a
       
       grid.refsnp(denote_row$snp,denote_row$pos,metal_pval,args[['drawMarkerNames']],denote_row$string,denote_row$color);
     }
-  } else {
+#  } else {
+  }
     # Draw label for reference SNP. 
     # This is either the label a user provides, or the actual reference SNP rs#. 
-    if (! is.null(refidx)) {
+    if (! is.null(refidx) && (is.null(denote_markers) || !refSnp %in% denote_markers$snp)) {
       if (!is.null(args[['refsnpName']])) {
         # User-provided refsnp label. 
         grid.refsnp(args[['refsnpName']],metal$pos[refidx],metal$P.value[refidx],args[['drawMarkerNames']],shadow=args[['refsnpShadow']]);
@@ -2538,7 +2541,7 @@ zplot <- function(metal,ld=NULL,recrate=NULL,refidx=NULL,nrugs=0,postlude=NULL,a
         grid.refsnp(csnp_name,csnp_data$pos,csnp_pval,args[['drawMarkerNames']]);
       }
     }
-  }
+#  }
     
   # Draw a dashed line at y = <significance level> if requested. 
   if (!is.null(args[['signifLine']])) {
@@ -4157,7 +4160,7 @@ if (!args[['showRefsnpAnnot']]) {
 }
 
 if ('pdf' %in% args[['format']]) {
-  pdf(file=args[['pdf']],width=args[['width']],height=args[['height']],version='1.4');
+  pdf(file=args[['pdf']],width=args[['width']],height=args[['height']],version='1.4',useDingbats=F);
   
   if ( prod(dim(metal)) == 0 ) { 
     message ('No data to plot.'); 
